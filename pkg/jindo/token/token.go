@@ -160,17 +160,17 @@ var tokenString = map[Token]string{
 	OperRGtr: "rgtr",
 }
 
-var keywordToken map[Token]string
+var KeywordToken map[Token]string
 
-func (t Token) isKeyword() bool {
+func (t Token) IsKeyword() bool {
 	return t > keyword_beg && t < keyword_end
 }
 
-func (t Token) isOperator() bool {
+func (t Token) IsOperator() bool {
 	return t > Operator_beg && t < Operator_end
 }
 
-func keyword(word string) Token {
+func Keyword(word string) Token {
 	for tok, str := range tokenString {
 		if str == word {
 			return tok
@@ -278,9 +278,9 @@ func (o Operator) String() string {
 // Operator precedences
 const (
 	_ = iota
-	precOrOr
-	precAndAnd
-	precCmp
-	precAdd
-	precMul
+	PrecOrOr
+	PrecAndAnd
+	PrecCmp
+	PrecAdd
+	PrecMul
 )
