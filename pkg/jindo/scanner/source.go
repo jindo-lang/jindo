@@ -34,13 +34,13 @@ func (s *source) init(in io.Reader, errh func(line, col uint, msg string)) {
 	s.chw = 0
 }
 
-// starting points for line and column numbers
-const linebase = 1
-const colbase = 1
+// starting points for Line and column numbers
+const Linebase = 1
+const Colbase = 1
 
 // pos returns the (line, col) source position of s.ch.
 func (s *source) pos() (line, col uint) {
-	return linebase + s.line, colbase + s.col
+	return Linebase + s.line, Colbase + s.col
 }
 
 // error reports the error msg at source position s.pos().
@@ -49,23 +49,23 @@ func (s *source) error(msg string) {
 	s.errh(line, col, msg)
 }
 
-// start starts a new active source segment (including s.ch).
-// As long as stop has not been called, the active segment's
-// bytes (excluding s.ch) may be retrieved by calling segment.
+// start starts a new active source Segment (including s.ch).
+// As long as stop has not been called, the active Segment's
+// bytes (excluding s.ch) may be retrieved by calling Segment.
 func (s *source) start()          { s.b = s.r - s.chw }
 func (s *source) stop()           { s.b = -1 }
-func (s *source) segment() []byte { return s.buf[s.b : s.r-s.chw] }
+func (s *source) Segment() []byte { return s.buf[s.b : s.r-s.chw] }
 
 // rewind rewinds the scanner's read position and character s.ch
-// to the start of the currently active segment, which must not
+// to the start of the currently active Segment, which must not
 // contain any newlines (otherwise position information will be
 // incorrect). Currently, rewind is only needed for handling the
 // source sequence ".."; it must not be called outside an active
-// segment.
+// Segment.
 func (s *source) rewind() {
 	// ok to verify precondition - rewind is rarely called
 	if s.b < 0 {
-		panic("no active segment")
+		panic("no active Segment")
 	}
 	s.col -= uint(s.r - s.b)
 	s.r = s.b
@@ -166,15 +166,15 @@ func (s *source) fill() {
 	s.ioerr = io.ErrNoProgress
 }
 
-// nextSize returns the next bigger size for a buffer of a given size.
+// nextSize returns the Next bigger size for a buffer of a given size.
 func nextSize(size int) int {
-	const min = 4 << 10 // 4K: minimum buffer size
-	const max = 1 << 20 // 1M: maximum buffer size which is still doubled
-	if size < min {
-		return min
+	const smin = 4 << 10 // 4K: minimum buffer size
+	const smax = 1 << 20 // 1M: maximum buffer size which is still doubled
+	if size < smin {
+		return smin
 	}
-	if size <= max {
+	if size <= smax {
 		return size << 1
 	}
-	return size + max
+	return size + smax
 }

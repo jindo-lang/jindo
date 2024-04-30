@@ -5,34 +5,32 @@
 // Package scanner implements a scanner for Jindo source text.
 // It takes a []byte as source which can then be tokenized
 // through repeated calls to the Scan method.
-//
 package scanner
 
 import (
 	"fmt"
 	"io"
+	"jindo/pkg/jindo/token"
 	"unicode"
 	"unicode/utf8"
-	"jindo/pkg/jindo/token"
 )
-
 
 type Scanner struct {
 	source
 	semi bool
 
-	line, col uint // position
-	token     token.Token
-	lit       string   // valid if tok istoken.Name,token.Literal, ortoken.Semi ("semicolon", "newline", or "EOF"); may be malformed if bad is true
-	bad       bool     // valid if tok istoken.Literal, true if a syntax error occurred, lit may be malformed
-	kind      token.LitKind  // valid if tok istoken.Literal
-	op        token.Operator // valid if tok istoken.Operator,token.AssignOp, ortoken.IncOp
-	prec      int      // valid if tok istoken.Operator,token.AssignOp, ortoken.IncOp
+	Line, Col uint // position
+	Token     token.Token
+	Lit       string         // valid if tok istoken.Name,token.Literal, ortoken.Semi ("semicolon", "newline", or "EOF"); may be malformed if bad is true
+	Bad       bool           // valid if tok istoken.Literal, true if a syntax error occurred, Lit may be malformed
+	Kind      token.LitKind  // valid if tok istoken.Literal
+	Op        token.Operator // valid if tok istoken.Operator,token.AssignOp, ortoken.IncOp
+	Prec      int            // valid if tok istoken.Operator,token.AssignOp, ortoken.IncOp
 }
 
 const EOFCHAR = '\000'
 
-func (l *Scanner) init(r io.Reader, errh func(line, col uint, msg string)) {
+func (l *Scanner) Init(r io.Reader, errh func(line, col uint, msg string)) {
 	l.source.init(r, errh)
 	l.semi = false
 }
@@ -43,7 +41,7 @@ func (l *Scanner) errorf(format string, args ...any) {
 
 // errorAtf reports an error at a byte column offset relative to the current Token start.
 func (l *Scanner) errorAtf(offset uint, format string, args ...any) {
-	l.errh(l.line, l.col+offset, fmt.Sprintf(format, args...))
+	l.errh(l.Line, l.Col+offset, fmt.Sprintf(format, args...))
 }
 
 func (l *Scanner) ident() {
@@ -51,26 +49,26 @@ func (l *Scanner) ident() {
 		l.nextch()
 	}
 
-	lit := l.segment()
+	lit := l.Segment()
 	tok := token.Keyword(string(lit))
 	if tok.IsKeyword() {
-		l.token = tok
+		l.Token = tok
 		return
 	}
 	l.semi = true
-	l.lit = string(lit)
-	l.token =token.Name
+	l.Lit = string(lit)
+	l.Token = token.Name
 }
 
 func (l *Scanner) setLit(kind token.LitKind, ok bool) {
 	l.semi = true
-	l.token =token.Literal
-	l.lit = string(l.segment())
-	l.bad = !ok
-	l.kind = kind
+	l.Token = token.Literal
+	l.Lit = string(l.Segment())
+	l.Bad = !ok
+	l.Kind = kind
 }
 
-func (l *Scanner) next() {
+func (l *Scanner) Next() {
 	semi := l.semi
 	l.semi = false
 
@@ -82,7 +80,7 @@ func (l *Scanner) next() {
 	}
 	l.source.start()
 
-	l.line, l.col = l.pos()
+	l.Line, l.Col = l.pos()
 
 	if isLetter(l.ch) || l.ch >= utf8.RuneSelf && l.atIdentChar(true) {
 		l.ident()
@@ -92,16 +90,16 @@ func (l *Scanner) next() {
 	switch l.ch {
 	case -1:
 		if semi {
-			l.lit = "EOF"
-			l.token =token.Semi
+			l.Lit = "\n"
+			l.Token = token.Semi
 			break
 		}
-		l.token =token.EOF
+		l.Token = token.EOF
 
 	case '\n':
 		l.nextch()
-		l.lit = "newline"
-		l.token =token.Semi
+		l.Lit = "\n"
+		l.Token = token.Semi
 
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 		l.number(false)
@@ -113,48 +111,48 @@ func (l *Scanner) next() {
 		l.rune()
 	case '(':
 		l.nextch()
-		l.token =token.Lparen
+		l.Token = token.Lparen
 
 	case '[':
 		l.nextch()
-		l.token =token.Lbrack
+		l.Token = token.Lbrack
 
 	case '{':
 		l.nextch()
-		l.token =token.Lbrace
+		l.Token = token.Lbrace
 
 	case ',':
 		l.nextch()
-		l.token =token.Comma
+		l.Token = token.Comma
 
 	case ';':
 		l.nextch()
-		l.lit = "semicolon"
-		l.token =token.Semi
+		l.Lit = "semicolon"
+		l.Token = token.Semi
 
 	case ')':
 		l.nextch()
 		l.semi = true
-		l.token =token.Rparen
+		l.Token = token.Rparen
 
 	case ']':
 		l.nextch()
 		l.semi = true
-		l.token =token.Rbrack
+		l.Token = token.Rbrack
 
 	case '}':
 		l.nextch()
 		l.semi = true
-		l.token =token.Rbrace
+		l.Token = token.Rbrace
 
 	case ':':
 		l.nextch()
 		if l.ch == '=' {
 			l.nextch()
-			l.token =token.Define
+			l.Token = token.Define
 			break
 		}
-		l.token =token.Colon
+		l.Token = token.Colon
 
 	case '.':
 		l.nextch()
@@ -166,113 +164,113 @@ func (l *Scanner) next() {
 			l.nextch()
 			if l.ch == '.' {
 				l.nextch()
-				l.token =token.DotDotDot
+				l.Token = token.DotDotDot
 				break
 			}
 			l.rewind() // now s.ch holds 1st '.'
 			l.nextch() // consume 1st '.' again
 		}
-		l.token =token.Dot
+		l.Token = token.Dot
 
 	case '+':
 		l.nextch()
-		l.op, l.prec = token.Add,token.PrecAdd
+		l.Op, l.Prec = token.Add, token.PrecAdd
 		if l.ch != '+' {
 			goto assignoper
 		}
 		l.nextch()
 		l.semi = true
-		l.token =token.IncOp
+		l.Token = token.IncOp
 	case '-':
 		l.nextch()
-		l.op, l.prec = token.Sub,token.PrecAdd
+		l.Op, l.Prec = token.Sub, token.PrecAdd
 		if l.ch != '+' {
 			goto assignoper
 		}
 		l.nextch()
 		l.semi = true
-		l.token =token.IncOp
+		l.Token = token.IncOp
 	case '*':
 		l.nextch()
-		l.op, l.prec = token.Mul,token.PrecMul
+		l.Op, l.Prec = token.Mul, token.PrecMul
 		if l.ch != '*' {
 			goto assignoper
 		}
 		l.nextch()
 		l.semi = true
-		l.token =token.IncOp
+		l.Token = token.IncOp
 	case '/':
 		l.nextch()
 		if l.ch == '/' {
 			for l.ch != '\n' && l.ch != -1 {
 				l.nextch()
 			}
-			l.next()
+			l.Next()
 			return
 		}
-		l.op, l.prec = token.Div,token.PrecMul
+		l.Op, l.Prec = token.Div, token.PrecMul
 		if l.ch != '+' {
 			goto assignoper
 		}
 		l.nextch()
 		l.semi = true
-		l.token =token.IncOp
+		l.Token = token.IncOp
 	case '%':
 		l.nextch()
-		l.op, l.prec = token.Rem,token.PrecMul
+		l.Op, l.Prec = token.Rem, token.PrecMul
 		goto assignoper
 	case '<':
 		l.nextch()
 		if l.ch == '=' {
 			l.nextch()
-			l.op, l.prec = token.Leq,token.PrecCmp
-			l.token =token.Op
+			l.Op, l.Prec = token.Leq, token.PrecCmp
+			l.Token = token.Op
 			break
 		}
 		//if l.ch == '<' {
 		//	l.nextch()
-		//	l.op, l.prec = Shl,token.PrecMul
+		//	l.op, l.prec = Shl,Token.PrecMul
 		//	goto assignoper
 		//}
-		l.op, l.prec = token.Lss,token.PrecCmp
-		l.token =token.Op
+		l.Op, l.Prec = token.Lss, token.PrecCmp
+		l.Token = token.Op
 
 	case '>':
 		l.nextch()
 		if l.ch == '=' {
 			l.nextch()
-			l.op, l.prec = token.Geq,token.PrecCmp
-			l.token =token.Op
+			l.Op, l.Prec = token.Geq, token.PrecCmp
+			l.Token = token.Op
 			break
 		}
 		//if l.ch == '>' {
 		//	l.nextch()
-		//	l.op, l.prec = Shr,token.PrecMul
+		//	l.op, l.prec = Shr,Token.PrecMul
 		//	goto assignoper
 		//}
-		l.op, l.prec = token.Gtr,token.PrecCmp
-		l.token =token.Op
+		l.Op, l.Prec = token.Gtr, token.PrecCmp
+		l.Token = token.Op
 
 	case '=':
 		l.nextch()
 		if l.ch == '=' {
 			l.nextch()
-			l.op, l.prec = token.Eql,token.PrecCmp
-			l.token =token.Op
+			l.Op, l.Prec = token.Eql, token.PrecCmp
+			l.Token = token.Op
 			break
 		}
-		l.token =token.Assign
+		l.Token = token.Assign
 
 	case '!':
 		l.nextch()
 		if l.ch == '=' {
 			l.nextch()
-			l.op, l.prec = token.Neq,token.PrecCmp
-			l.token =token.Op
+			l.Op, l.Prec = token.Neq, token.PrecCmp
+			l.Token = token.Op
 			break
 		}
-		l.op, l.prec = token.Not, 0
-		l.token =token.Op
+		l.Op, l.Prec = token.Not, 0
+		l.Token = token.Op
 	}
 
 	return
@@ -280,10 +278,10 @@ func (l *Scanner) next() {
 assignoper:
 	if l.ch == '=' {
 		l.nextch()
-		l.token =token.AssignOp
+		l.Token = token.AssignOp
 		return
 	}
-	l.token =token.Op
+	l.Token = token.Op
 
 }
 func (l *Scanner) rune() {
@@ -362,14 +360,14 @@ func (l *Scanner) stdString() {
 	}
 
 	l.setLit(token.StringLit, ok)
-	seg := l.lit
+	seg := l.Lit
 	seg = seg[1 : len(seg)-1]
 	str := make([]byte, 0)
 	for i := 0; i < len(seg); i++ {
 		if seg[i] == '\\' {
 			_len := len(seg)
 			if _len < i+2 {
-				panic("invalid string lit")
+				panic("invalid string Lit")
 			}
 			switch seg[i+1] {
 			case '\\':
@@ -389,14 +387,14 @@ func (l *Scanner) stdString() {
 			case 'v':
 				str = append(str, []byte("\v")...)
 			default:
-				panic("invalid string lit")
+				panic("invalid string Lit")
 			}
 			i++
 			continue
 		}
 		str = append(str, seg[i])
 	}
-	l.lit = string(str)
+	l.Lit = string(str)
 }
 
 func (l *Scanner) escape(quote rune) bool {
@@ -468,7 +466,7 @@ func (l *Scanner) rawString() {
 		l.nextch()
 	}
 	l.setLit(token.StringLit, ok)
-	l.lit = l.lit[1 : len(l.lit)-1]
+	l.Lit = l.Lit[1 : len(l.Lit)-1]
 }
 
 func lower(ch rune) rune     { return ('a' - 'A') | ch } // returns lower-case ch iff ch is ASCII letter
