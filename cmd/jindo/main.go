@@ -42,6 +42,38 @@ func main() {
 	}
 }
 
+// lookupCmd interprets the initial elements of args
+// to find a command to run (cmd.Runnable() == true)
+// or else a command group that ran out of arguments
+// or had an unknown subcommand (len(cmd.Commands) > 0).
+// It returns that command and the number of elements of args
+// that it took to arrive at that command.
+func lookupCmd(args []string) (cmd *command.Command, used int) {
+	cmd = Jindo
+	for used < len(args) {
+		c := cmd.Lookup(args[used])
+		if c == nil {
+			break
+		}
+		if c.Runnable() {
+			cmd = c
+			used++
+			break
+		}
+		if len(c.Commands) > 0 {
+			cmd = c
+			used++
+			if used >= len(args) || args[0] == "help" {
+				break
+			}
+			continue
+		}
+		// len(c.Commands) == 0 && !c.Runnable() => help text; stop at "help"
+		break
+	}
+	return cmd, used
+}
+
 func invoke(cmd *command.Command, args []string) {
 	cmd.Flag.Usage = func() { cmd.Usage() }
 	if cmd.CustomFlags {
