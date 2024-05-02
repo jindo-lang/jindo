@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"jindo-tool/command"
 	"jindo-tool/help"
@@ -34,7 +35,7 @@ func mainUsage() {
 }
 
 func main() {
-	args := os.Args[1:]
+	args := flag.Args()
 	if len(args) < 1 {
 		mainUsage()
 	}
