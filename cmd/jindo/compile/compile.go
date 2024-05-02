@@ -8,7 +8,13 @@ package compile
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"jindo-tool/command"
+	"jindo/pkg/jindo/ast"
+	"jindo/pkg/jindo/parser"
+	"os"
+	"path/filepath"
 )
 
 var CmdCompile = &command.Command{
@@ -52,12 +58,33 @@ func init() {
 }
 
 func runCompile(ctx context.Context, cmd *command.Command, args []string) {
-	// init compiler
-	// load source paths
+	fmt.Printf("source(s): %v\noutput name: %v\n", args, FlagO)
+	space, err := loadSpace(ctx, args)
+	if err != nil {
+		panic(err)
+	}
+	for _, f := range space.FileSet {
+		e := ast.Fdump(os.Stdout, f)
+		if e != nil {
+			panic(e)
+		}
+		fmt.Println()
+	}
+	//args == sources
+	// load(sources) => space
+	// 		space{ spaceName; files; imports }
+	// load(sources):
+	//		check(file extensions) => ext
+	//			if any(args...ext).not(".paw") => abort
+	//
+	//		check(file directions) => dir
+	//			if any(args...dir).different() => abort
+	//
+	// 		check(space names)
+	//			if any(args...pkgName).different() => abort
+	//		check(imports)
+	//	return space{spaceName, files}
 
-	print(args)
-
-	//compiler := NewCompiler()
 }
 
 type Compiler struct {
@@ -66,4 +93,46 @@ type Compiler struct {
 
 func NewCompiler() *Compiler {
 	return nil
+}
+
+type Space struct {
+	Name    string
+	FileSet []*ast.File
+}
+
+func loadSpace(ctx context.Context, sources []string) (s *Space, e error) {
+	if len(sources) == 0 {
+		return nil, errors.New("no source files provided")
+	}
+
+	s = new(Space)
+
+	// Check for file extensions and directory uniformity
+	var dir string
+	space := ""
+	for _, file := range sources {
+		if filepath.Ext(file) != ".paw" {
+			return nil, fmt.Errorf("invalid file extension for %s, expected .paw", file)
+		}
+
+		currentDir := filepath.Dir(file)
+		if dir != "" && currentDir != dir {
+			return nil, fmt.Errorf("files must be in the same directory: %s is not in %s", file, dir)
+		}
+		dir = currentDir
+
+		parsed, err := parser.ParseFile(file, nil)
+		if err != nil {
+			return nil, err
+		}
+		curSpace := parsed.SpaceName.Value
+		if space != "" && curSpace != space {
+			return nil, fmt.Errorf("space name mismatch: %s does not match %s", curSpace, space)
+		}
+		space = curSpace
+		s.FileSet = append(s.FileSet, parsed)
+	}
+	s.Name = space
+
+	return s, nil
 }
