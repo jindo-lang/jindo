@@ -99,7 +99,7 @@ func (c *Command) Name() string {
 
 func (c *Command) Usage() {
 	fmt.Fprintf(os.Stderr, "usage: %s\n", c.UsageLine)
-	fmt.Fprintf(os.Stderr, "Run 'go help %s' for details.\n", c.LongName())
+	fmt.Fprintf(os.Stderr, "Run 'jindo help %s' for details.\n", c.LongName())
 	SetExitStatus(2)
 	Exit()
 }

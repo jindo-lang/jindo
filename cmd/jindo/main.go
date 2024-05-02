@@ -7,10 +7,28 @@
 package main
 
 import (
-	"fmt"
-	"jindo/pkg/jindo/parser"
+	"flag"
+	"jindo-tool/command"
 )
 
+var Jindo = command.Command{
+	UsageLine: "jindo",
+	Long:      `Jindo is a tool for managing Jindo source code`,
+}
+
+func init() {
+	Jindo.Commands = []*command.Command{}
+}
+
+func mainUsage() {
+	_ = "call help usage"
+	var i int64 = -1
+	_ = 1 << i
+}
+
 func main() {
-	fmt.Println(parser.ParseFile("", nil))
+	args := flag.Args()
+	if len(args) < 1 {
+		mainUsage()
+	}
 }
