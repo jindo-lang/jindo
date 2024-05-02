@@ -1,6 +1,10 @@
-// Copyright 2024 The Jindo Authors. All rights reserved.
-// This file is part of jindo and is licensed under
-// the GNU General Public License version 3, which is available at
+// Copyright 2017 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+//
+// Additional modifications made by The Jindo Authors in 2024.
+// This file is part of Jindo and is licensed under
+// the GNU General Public License version 3, available at
 // https://www.gnu.org/licenses/gpl-3.0.html or in the LICENSE file
 // located in the root directory of this source tree.
 
@@ -29,13 +33,13 @@ The commands are:
 {{range .Commands}}{{if or (.Runnable) .Commands}}
 	{{.Name | printf "%-11s"}} {{.Short}}{{end}}{{end}}
 
-Use "go help{{with .LongName}} {{.}}{{end}} <command>" for more information about a command.
-{{if eq (.UsageLine) "go"}}
+Use "jindo help{{with .LongName}} {{.}}{{end}} <command>" for more information about a command.
+{{if eq (.UsageLine) "jindo"}}
 Additional help topics:
 {{range .Commands}}{{if and (not .Runnable) (not .Commands)}}
 	{{.Name | printf "%-15s"}} {{.Short}}{{end}}{{end}}
 
-Use "go help{{with .LongName}} {{.}}{{end}} <topic>" for more information about that topic.
+Use "jindo help{{with .LongName}} {{.}}{{end}} <topic>" for more information about that topic.
 {{end}}
 `
 
@@ -147,11 +151,11 @@ Args:
 		}
 
 		// helpSuccess is the help command using as many args as possible that would succeed.
-		helpSuccess := "go help"
+		helpSuccess := "jindo help"
 		if i > 0 {
 			helpSuccess += " " + strings.Join(args[:i], " ")
 		}
-		fmt.Fprintf(os.Stderr, "go help %s: unknown help topic. Run '%s'.\n", strings.Join(args, " "), helpSuccess)
+		fmt.Fprintf(os.Stderr, "jindo help %s: unknown help topic. Run '%s'.\n", strings.Join(args, " "), helpSuccess)
 		os.Exit(2)
 	}
 
@@ -160,6 +164,6 @@ Args:
 	} else {
 		tmpl(os.Stdout, helpTemplate, cmd)
 	}
-	// not exit 2: succeeded at 'go help cmd'.
+	// not exit 2: succeeded at 'jidno help cmd'.
 	return
 }

@@ -18,21 +18,21 @@ import (
 	"sync"
 )
 
-// A Command is an implementation of a go command
-// like go build or go fix.
+// A Command is an implementation of a jindo command
+// like jindo build or jindo fix.
 type Command struct {
 	// Run runs the command.
 	// The args are the arguments after the command name.
 	Run func(ctx context.Context, cmd *Command, args []string)
 
 	// UsageLine is the one-line usage message.
-	// The words between "go" and the first flag or argument in the line are taken to be the command name.
+	// The words between "jindo" and the first flag or argument in the line are taken to be the command name.
 	UsageLine string
 
-	// Short is the short description shown in the 'go help' output.
+	// Short is the short description shown in the 'jindo help' output.
 	Short string
 
-	// Long is the long message shown in the 'go help <this-command>' output.
+	// Long is the long message shown in the 'jindo help <this-command>' output.
 	Long string
 
 	// Flag is a set of flags specific to this command.
@@ -43,7 +43,7 @@ type Command struct {
 	CustomFlags bool
 
 	// Commands lists the available commands and help topics.
-	// The order here is the order in which they are printed by 'go help'.
+	// The order here is the order in which they are printed by 'jindo help'.
 	// Note that subcommands are in general best avoided.
 	Commands []*Command
 }
@@ -76,16 +76,16 @@ func hasFlag(c *Command, name string) bool {
 	return false
 }
 
-// LongName returns the command's long name: all the words in the usage line between "go" and a flag or argument,
+// LongName returns the command's long name: all the words in the usage line between "jindo" and a flag or argument,
 func (c *Command) LongName() string {
 	name := c.UsageLine
 	if i := strings.Index(name, " ["); i >= 0 {
 		name = name[:i]
 	}
-	if name == "go" {
+	if name == "jindo" {
 		return ""
 	}
-	return strings.TrimPrefix(name, "go ")
+	return strings.TrimPrefix(name, "jindo ")
 }
 
 // Name returns the command's short name: the last word in the usage line before a flag or argument.
@@ -142,7 +142,7 @@ func ExitIfErrors() {
 func Error(err error) {
 	// We use errors.Join to return multiple errors from various routines.
 	// If we receive multiple errors joined with a basic errors.Join,
-	// handle each one separately so that they all have the leading "go: " prefix.
+	// handle each one separately so that they all have the leading "jindo: " prefix.
 	// A plain interface check is not good enough because there might be
 	// other kinds of structured errors that are logically one unit and that
 	// add other context: only handling the wrapped errors would lose
@@ -153,7 +153,7 @@ func Error(err error) {
 		}
 		return
 	}
-	Errorf("go: %v", err)
+	Errorf("jindo: %v", err)
 }
 
 func Fatal(err error) {
@@ -177,7 +177,7 @@ func GetExitStatus() int {
 }
 
 // Run runs the command, with stdout and stderr
-// connected to the go command's own stdout and stderr.
+// connected to the jindo command's own stdout and stderr.
 // If the command fails, Run reports the error using Errorf.
 func Run(cmdargs ...any) {
 	//TODO Fix this
