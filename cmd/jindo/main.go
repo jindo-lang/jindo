@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"jindo-tool/command"
+	"jindo-tool/compile"
 	"jindo-tool/help"
 	"os"
 	"slices"
@@ -26,6 +27,7 @@ var Jindo = &command.Command{
 func init() {
 	Jindo.Commands = []*command.Command{
 		Jindo,
+		compile.CmdCompile,
 	}
 }
 
