@@ -8,9 +8,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"jindo-tool/command"
 	"jindo-tool/help"
 	"os"
+	"slices"
+	"strings"
 )
 
 var Jindo = &command.Command{
@@ -40,6 +43,30 @@ func main() {
 		help.Help(os.Stdout, Jindo, args[1:])
 		return
 	}
+	cmd, used := lookupCmd(args)
+	cmdName := strings.Join(args[:used], " ")
+	if len(cmd.Commands) > 0 {
+		if used >= len(args) {
+			help.PrintUsage(os.Stderr, cmd)
+			os.Exit(2)
+		}
+		if args[used] == "help" {
+			// Accept 'go mod help' and 'go mod help foo' for 'go help mod' and 'go help mod foo'.
+			help.Help(os.Stdout, cmd, append(slices.Clip(args[:used]), args[used+1:]...))
+			os.Exit(0)
+		}
+		helpArg := ""
+		if used > 0 {
+			helpArg += " " + strings.Join(args[:used], " ")
+		}
+		if cmdName == "" {
+			cmdName = args[0]
+		}
+		fmt.Fprintf(os.Stderr, "go %s: unknown command\nRun 'go help%s' for usage.\n", cmdName, helpArg)
+		os.Exit(2)
+	}
+	invoke(cmd, args[used-1:])
+	os.Exit(0)
 }
 
 // lookupCmd interprets the initial elements of args
