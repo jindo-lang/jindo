@@ -99,8 +99,24 @@ type Compiler struct {
 	compileResult []byte
 }
 
-func NewCompiler() *Compiler {
-	return nil
+func NewCompiler(printMode bool, errh parser.ErrorHandler) *Compiler {
+	c := new(Compiler)
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	c.resolved = false
+	c.cwd = cwd
+
+	c.writer = nil
+	if printMode {
+		// TODO: implement dumper
+		c.writer = os.Stdout
+	}
+
+	return c
 }
 
 func (c *Compiler) compile(ctx context.Context, format string, space *Space) error {
