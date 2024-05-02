@@ -31,3 +31,4 @@
 !go.work
 /.idea/
 /cmd-go/
+!*/testdata/
