@@ -7,28 +7,36 @@
 package main
 
 import (
-	"flag"
 	"jindo-tool/command"
+	"jindo-tool/help"
+	"os"
 )
 
-var Jindo = command.Command{
+var Jindo = &command.Command{
 	UsageLine: "jindo",
-	Long:      `Jindo is a tool for managing Jindo source code`,
+
+	Long: `Jindo is a tool for managing Jindo source code`,
 }
 
 func init() {
-	Jindo.Commands = []*command.Command{}
+	Jindo.Commands = []*command.Command{
+		Jindo,
+	}
 }
 
 func mainUsage() {
-	_ = "call help usage"
-	var i int64 = -1
-	_ = 1 << i
+	help.PrintUsage(os.Stderr, Jindo)
+	os.Exit(2)
 }
 
 func main() {
-	args := flag.Args()
+	args := os.Args[1:]
 	if len(args) < 1 {
 		mainUsage()
+	}
+
+	if args[0] == "help" {
+		help.Help(os.Stdout, Jindo, args[1:])
+		return
 	}
 }
