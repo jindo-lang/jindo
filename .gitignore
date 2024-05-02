@@ -18,6 +18,10 @@
 *.out
 *.paw
 *.sum
+*.o
+*.a
+*.obj
+*.asm
 .DS_Store
 
 # Dependency directories (remove the comment below to include it)
