@@ -32,3 +32,4 @@
 /.idea/
 /cmd-go/
 !*/testdata/
+!*/testdata/*
