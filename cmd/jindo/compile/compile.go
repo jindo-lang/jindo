@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"jindo-tool/command"
 	"jindo/pkg/jindo/ast"
 	"jindo/pkg/jindo/parser"
@@ -68,36 +69,72 @@ func runCompile(ctx context.Context, cmd *command.Command, args []string) {
 	if err != nil {
 		panic(err)
 	}
-	for _, f := range space.FileSet {
-		e := ast.Fdump(os.Stdout, f)
-		if e != nil {
-			panic(e)
-		}
-		fmt.Println()
-	}
-	//args == sources
-	// load(sources) => space
-	// 		space{ spaceName; files; imports }
-	// load(sources):
-	//		check(file extensions) => ext
-	//			if any(args...ext).not(".paw") => abort
-	//
-	//		check(file directions) => dir
-	//			if any(args...dir).different() => abort
-	//
-	// 		check(space names)
-	//			if any(args...pkgName).different() => abort
-	//		check(imports)
-	//	return space{spaceName, files}
 
+	// resolve_import_path: space.files... => f
+	// 		# check path string error
+	// 		if any( (f...).importPaths...).is(wrong_string)
+	// 			abort
+	//
+	// 		# try generating import metadata
+	// 		import(f...) => res[ importData ]
+	//  	if any(res...).has_error()
+	//  		abort
+	//
+	// ===> space.imports += f
+
+	comp := NewCompiler(false, nil)
+	err = comp.compile(ctx, format, space)
+	if err != nil {
+		panic(err)
+	}
+	comp.dump(name)
+	os.Exit(0)
 }
 
 type Compiler struct {
-	WorkDir string
+	cwd           string
+	space         *Space
+	writer        io.Writer
+	resolved      bool
+	compileResult []byte
 }
 
 func NewCompiler() *Compiler {
 	return nil
+}
+
+func (c *Compiler) compile(ctx context.Context, format string, space *Space) error {
+	//panic("compile")
+	return nil
+}
+
+func (c *Compiler) dump(oname string) {
+	if !c.resolved {
+		panic("cannot dump. compiler not resolved")
+	}
+
+	// means file writing
+	if c.writer == nil {
+
+		// means format == obj
+		if oname == "" {
+			// TODO: naming based on first file input
+			oname = c.space.Name + ".obj"
+		}
+
+		outFile, err := os.OpenFile(oname, os.O_CREATE|os.O_WRONLY, 0666)
+		if err != nil {
+			panic("Failed to open or create file: " + err.Error())
+		}
+		defer outFile.Close() // Ensure that the file is closed when all operations are done
+
+		c.writer = outFile
+	}
+
+	_, err := c.writer.Write(c.compileResult)
+	if err != nil {
+		panic(err)
+	}
 }
 
 type Space struct {
