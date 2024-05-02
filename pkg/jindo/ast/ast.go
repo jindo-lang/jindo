@@ -1,78 +1,36 @@
 // Copyright 2024 The Jindo Authors. All rights reserved.
-// Use of this source code is governed by a GPL-3 style
-// license that can be found in the LICENSE file.
-
-// Package ast declares the types used to represent syntax trees for Jindo
-// packages.
+// This file is part of jindo and is licensed under
+// the GNU General Public License version 3, which is available at
+// https://www.gnu.org/licenses/gpl-3.0.html or in the LICENSE file
+// located in the root directory of this source tree.
 
 package ast
 
 import (
-	"jindo/pkg/jindo/scanner"
+	"jindo/pkg/jindo/position"
 	"jindo/pkg/jindo/token"
 )
 
-// ----------------------------------------------------------------------------
-// Interfaces
-//
-// There are 3 main classes of nodes: Expressions and type nodes,
-// statement nodes, and declaration nodes. The node names usually
-// match the corresponding Jindo spec production names to which they
-// correspond. The node fields correspond to the individual parts
-// of the respective productions.
-//
-// All nodes contain position information marking the beginning of
-// the corresponding source text segment; it is accessible via the
-// Pos accessor method. Nodes may contain additional position info
-// for language constructs where comments may be found between parts
-// of the construct (typically any larger, parenthesized subpart).
-// That position information is needed to properly position comments
-// when printing the construct.
-
-//// All node types implement the Node interface.
-//type Node interface {
-//	Pos() token.Pos // position of first character belonging to the node
-//	End() token.Pos // position of first character immediately after the node
-//}
-//
-//// All expression nodes implement the Expr interface.
-//type Expr interface {
-//	Node
-//	exprNode()
-//}
-//
-//// All statement nodes implement the Stmt interface.
-//type Stmt interface {
-//	Node
-//	stmtNode()
-//}
-//
-//// All declaration nodes implement the Decl interface.
-//type Decl interface {
-//	Node
-//	declNode()
-//}
-
 type Node interface {
-	GetPos() scanner.Pos
+	GetPos() position.Pos
 	aNode()
-	SetPos(pos scanner.Pos)
+	SetPos(pos position.Pos)
 }
 
 type node struct {
-	pos scanner.Pos
+	Pos position.Pos
 }
 
-func (n *node) GetPos() scanner.Pos { return n.pos }
-func (*node) aNode()                {}
-func (n *node) SetPos(pos scanner.Pos) {
-	n.pos = pos
+func (n *node) GetPos() position.Pos { return n.Pos }
+func (*node) aNode()                 {}
+func (n *node) SetPos(pos position.Pos) {
+	n.Pos = pos
 }
 
 type File struct {
 	SpaceName *Name
 	DeclList  []Decl
-	EOF       scanner.Pos
+	EOF       position.Pos
 	node
 }
 
@@ -83,10 +41,17 @@ type (
 		aDecl()
 	}
 
+	//              Path
+	ImportDecl struct {
+		Group *Group    // nil means not part of a group
+		Path  *BasicLit // Path.Bad || Path.Kind == StringLit; nil means no path
+		decl
+	}
+
 	OperDecl struct {
 		Group        *Group
 		TypeL, TypeR *Field
-		Oper         token.Token
+		Oper         token.Operator
 		Return       Expr
 		Body         *BlockStmt
 		decl
@@ -122,9 +87,9 @@ type decl struct{ node }
 
 func (*decl) aDecl() {}
 
-func NewName(pos scanner.Pos, value string) *Name {
+func NewName(pos position.Pos, value string) *Name {
 	n := new(Name)
-	n.pos = pos
+	n.Pos = pos
 	n.Value = value
 	return n
 }
@@ -183,7 +148,7 @@ type (
 	}
 
 	ReturnStmt struct {
-		Return Expr
+		Result Expr
 		stmt
 	}
 
@@ -232,7 +197,7 @@ type (
 
 	BlockStmt struct {
 		StmtList []Stmt
-		Rbrace   scanner.Pos
+		Rbrace   position.Pos
 		stmt
 	}
 )
@@ -253,11 +218,6 @@ type (
 	Expr interface {
 		Node
 		aExpr()
-	}
-
-	BinaryExpr interface {
-		Node
-		aBinExpr()
 	}
 
 	// Placeholder for an expression that failed to parse
@@ -290,7 +250,7 @@ type (
 	Operation struct {
 		Op   token.Operator
 		X, Y Expr // Y == nil means unary expression
-		binExpr
+		expr
 	}
 
 	ParenExpr struct {
@@ -334,12 +294,6 @@ func (simpleStmt) aSimpleStmt() {}
 type expr struct{ node }
 
 func (*expr) aExpr() {}
-
-type binExpr struct{ node }
-
-func (*binExpr) aBinExpr() {}
-
-func (*binExpr) aExpr() {}
 
 type Group struct {
 	_ int // not empty so we are guaranteed different Group instances

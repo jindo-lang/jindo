@@ -1,9 +1,47 @@
+// Copyright 2016 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// This file implements source, a buffered rune reader
+// specialized for scanning Go code: Reading
+// ASCII characters, maintaining current (line, col)
+// position information, and recording of the most
+// recently read source segment are highly optimized.
+// This file is self-contained (go tool compile source.go
+// compiles) and thus could be made into its own package.
+
 package scanner
 
 import (
 	"io"
 	"unicode/utf8"
 )
+
+// The source buffer is accessed using three indices b (begin),
+// r (read), and e (end):
+//
+// - If b >= 0, it points to the beginning of a segment of most
+//   recently read characters (typically a Go literal).
+//
+// - r points to the byte immediately following the most recently
+//   read character ch, which starts at r-chw.
+//
+// - e points to the byte immediately following the last byte that
+//   was read into the buffer.
+//
+// The buffer content is terminated at buf[e] with the sentinel
+// character utf8.RuneSelf. This makes it possible to test for
+// the common case of ASCII characters with a single 'if' (see
+// nextch method).
+//
+//                +------ content in use -------+
+//                v                             v
+// buf [...read...|...segment...|ch|...unread...|s|...free...]
+//                ^             ^  ^            ^
+//                |             |  |            |
+//                b         r-chw  r            e
+//
+// Invariant: -1 <= b < r <= e < len(buf) && buf[e] == sentinel
 
 type source struct {
 	in   io.Reader
@@ -34,13 +72,13 @@ func (s *source) init(in io.Reader, errh func(line, col uint, msg string)) {
 	s.chw = 0
 }
 
-// starting points for Line and column numbers
-const Linebase = 1
-const Colbase = 1
+// starting points for line and column numbers
+const linebase = 1
+const colbase = 1
 
 // pos returns the (line, col) source position of s.ch.
 func (s *source) pos() (line, col uint) {
-	return Linebase + s.line, Colbase + s.col
+	return linebase + s.line, colbase + s.col
 }
 
 // error reports the error msg at source position s.pos().
@@ -65,7 +103,7 @@ func (s *source) Segment() []byte { return s.buf[s.b : s.r-s.chw] }
 func (s *source) rewind() {
 	// ok to verify precondition - rewind is rarely called
 	if s.b < 0 {
-		panic("no active Segment")
+		panic("no active segment")
 	}
 	s.col -= uint(s.r - s.b)
 	s.r = s.b
@@ -96,7 +134,7 @@ redo:
 		s.fill()
 	}
 
-	// EOF
+	// fileOrEof
 	if s.r == s.e {
 		if s.ioerr != io.EOF {
 			// ensure we never start with a '/' (e.g., rooted path) in the error message
@@ -168,13 +206,13 @@ func (s *source) fill() {
 
 // nextSize returns the Next bigger size for a buffer of a given size.
 func nextSize(size int) int {
-	const smin = 4 << 10 // 4K: minimum buffer size
-	const smax = 1 << 20 // 1M: maximum buffer size which is still doubled
-	if size < smin {
-		return smin
+	const min = 4 << 10 // 4K: minimum buffer size
+	const max = 1 << 20 // 1M: maximum buffer size which is still doubled
+	if size < min {
+		return min
 	}
-	if size <= smax {
+	if size <= max {
 		return size << 1
 	}
-	return size + smax
+	return size + max
 }

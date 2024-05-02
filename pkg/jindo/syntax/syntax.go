@@ -4,13 +4,4 @@
 // https://www.gnu.org/licenses/gpl-3.0.html or in the LICENSE file
 // located in the root directory of this source tree.
 
-package main
-
-import (
-	"fmt"
-	"jindo/pkg/jindo/parser"
-)
-
-func main() {
-	fmt.Println(parser.ParseFile("", nil))
-}
+package syntax
