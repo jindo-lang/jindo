@@ -35,6 +35,7 @@ func mainUsage() {
 }
 
 func main() {
+	flag.Parse()
 	args := flag.Args()
 	if len(args) < 1 {
 		mainUsage()
@@ -63,7 +64,7 @@ func main() {
 		if cmdName == "" {
 			cmdName = args[0]
 		}
-		fmt.Fprintf(os.Stderr, "go %s: unknown command\nRun 'go help%s' for usage.\n", cmdName, helpArg)
+		fmt.Fprintf(os.Stderr, "jindo %s: unknown command\nRun 'jindo help%s' for usage.\n", cmdName, helpArg)
 		os.Exit(2)
 	}
 	invoke(cmd, args[used-1:])
