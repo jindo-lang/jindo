@@ -1,23 +1,26 @@
+// Copyright 2024 The Jindo Authors. All rights reserved.
+// This file is part of jindo and is licensed under
+// the GNU General Public License version 3, which is available at
+// https://www.gnu.org/licenses/gpl-3.0.html or in the LICENSE file
+// located in the root directory of this source tree.
+
 package token
 
-func (t Token) IsReversedOper() bool {
-	return t > Reversed_oper && t < Operator_end
-}
+type Token uint8
 
-// Token is the set of lexical tokens of the Go programming language.
-type Token int
+type token = Token
 
 const (
-	_    Token = iota
+	_   token = iota
 	EOF       // EOF
 
 	// names and literals
 	Name    // name
-	Literal // Literal
+	Literal // literal
 
 	// operators and operations
-	// _Operator is excluding '*' (_Star)
-	Op // op
+	// Operator is excluding '*' (Star)
+	Op       // op
 	AssignOp // op=
 	IncOp    // opop
 	Assign   // =
@@ -36,251 +39,47 @@ const (
 	Colon     // :
 	Dot       // .
 	DotDotDot // ...
-	Comment   // //
 
 	// keywords
 	keyword_beg
-	Import // import
-	If     // if
+	Break    // break
+	Const    // const
+	Continue // continue
+	While
 	Else   // else
-	Space  // space
-	Var    // var
-	Const  // const
-	Type   // type
-	Oper   // oper
-	Func   // func
-	Return // return
 	For    // for
-	While  // while
-	Break  // break
-
-	Operator_beg
-	OperNot       // !
-	OperAdd       // add
-	OperSub       // sub
-	OperMul       // mul
-	OperDiv       // div
-	OperRem       // rem
-	OperEql       // eql
-	OperGtr       // gtr
-	Reversed_oper // rem
-	OperRAdd      // radd
-	OperRSub      // rsub
-	OperRMul      // rmul
-	OperRDiv      // rdiv
-	OperRRem      // rrem
-	OperREql      // reql
-	OperRGtr      // rgtr
-	Operator_end
+	Func   // func
+	If     // if
+	Import // import
+	Space  // space
+	Return // return
+	Type   // type
+	Var    // var
+	Oper   // oper
 	keyword_end
+
+	tokenCount
 )
 
-//	// keywords
-//	_Case        // case
-//	_Chan        // chan
-//	_Const       // const
-//	_Continue    // continue
-//	_Default     // default
-//	_Defer       // defer
-//	_Fallthrough // fallthrough
-//	_Go          // go
-//	_Goto        // goto
-//	_Interface   // interface
-//	_Map         // map
-//	_Range       // range
-//	_Select      // select
-//	_Struct      // struct
-//	_Switch      // switch
-//
-//	// empty line comment to exclude it from .String
-//	tokenCount //
-//)
+func (t token) IsKeyword() bool { return t > keyword_beg && t < keyword_end }
 
-func (t Token) String() string {
-	return tokenString[t]
+// Make sure we have at most 64 tokens so we can use them in a set.
+const _ uint64 = 1 << (tokenCount - 1)
+
+// Contains reports whether tok is in tokset.
+func Contains(tokset uint64, tok token) bool {
+	return tokset&(1<<tok) != 0
 }
 
-var tokenString = map[Token]string{
-	EOF: "EOF",
+type LitKind uint8
 
-	// names and literals
-	Name:    "name",
-	Literal: "Literal",
-
-	// operators and operations
-	// _Operator is excluding '*' (_Star)
-	Op: "op",
-	AssignOp: "op=",
-	IncOp:    "opop",
-	Assign:   "=",
-	Define:   ":=",
-	Star:     "*",
-
-	// delimiters
-	Lparen:    "(",
-	Lbrack:    "[",
-	Lbrace:    "{",
-	Rparen:    ")",
-	Rbrack:    "]",
-	Rbrace:    "}",
-	Comma:     ",",
-	Semi:      ";",
-	Colon:     ":",
-	Dot:       ".",
-	DotDotDot: "...",
-	Comment:   "//",
-
-	Var:     "var",
-	Const:   "const",
-	Type:    "type",
-	Import:  "import",
-	If:      "if",
-	Else:    "else",
-	Space:   "space",
-	Oper:    "oper",
-	Func:    "func",
-	Return:  "return",
-	For:     "for",
-	While:   "while",
-	Break:   "break",
-	OperNot:  "not",
-	OperAdd:  "add",
-	OperSub:  "sub",
-	OperMul:  "mul",
-	OperDiv:  "div",
-	OperEql:  "eql",
-	OperGtr:  "gtr",
-	OperRem:  "rem",
-	OperRAdd: "radd",
-	OperRSub: "rsub",
-	OperRMul: "rmul",
-	OperRDiv: "rdiv",
-	OperRRem: "rrem",
-	OperREql: "reql",
-	OperRGtr: "rgtr",
-}
-
-var KeywordToken map[Token]string
-
-func (t Token) IsKeyword() bool {
-	return t > keyword_beg && t < keyword_end
-}
-
-func (t Token) IsOperator() bool {
-	return t > Operator_beg && t < Operator_end
-}
-
-func Keyword(word string) Token {
-	for tok, str := range tokenString {
-		if str == word {
-			return tok
-		}
-	}
-	return Name
-}
-
-type LitKind int
-
+// TODO(gri) With the 'i' (imaginary) suffix now permitted on integer
+// and floating-point numbers, having a single ImagLit does
+// not represent the literal kind well anymore. Remove it?
 const (
 	IntLit LitKind = iota
 	FloatLit
+	ImagLit
 	RuneLit
 	StringLit
-)
-
-func (t Token) OperTokenToOperator() Operator {
-	switch t {
-	case OperEql:
-		return Eql // ==
-	case OperGtr:
-		return Gtr // >
-	case OperAdd:
-		return Add // +
-	case OperSub:
-		return Sub // -
-	case OperMul:
-		return Mul // *
-	case OperDiv:
-		return Div // /
-	case OperRem:
-		return Rem // %
-	}
-	return 0
-}
-
-type Operator int
-
-const (
-	NoneOP Operator = iota
-
-	// Def is the : in :=
-	Def // :
-	Not // !
-
-	// precOrOr
-	OrOr // ||
-
-	// precAndAnd
-	AndAnd // &&
-
-	// precCmp
-	Eql // ==
-	Neq // !=
-	Lss // <
-	Leq // <=
-	Gtr // >
-	Geq // >=
-
-	// precAdd
-	Add // +
-	Sub // -
-	//Or  // |
-	//Xor // ^
-
-	// precMul
-	Mul // *
-	Div // /
-	Rem // %
-	//And    // &
-	//AndNot // &^
-	//Shl    // <<
-	//Shr    // >>
-)
-
-var _op = [...]string{
-	Def:    ":",
-	Not:    "!",
-	OrOr:   "||",
-	AndAnd: "&&",
-	Eql:    "==",
-	Neq:    "!=",
-	Lss:    "<",
-	Leq:    "<=",
-	Gtr:    ">",
-	Geq:    ">=",
-	Add:    "+",
-	Sub:    "-",
-	//Or:     "|",
-	//Xor:    "^",
-	//Mul:    "*",
-	//Div:    "/",
-	Rem: "%",
-	//And:    "&",
-	//AndNot: "&^",
-	//Shl:    "<<",
-	//Shr:    ">>",
-}
-
-func (o Operator) String() string {
-	return _op[o]
-}
-
-// Operator precedences
-const (
-	_ = iota
-	PrecOrOr
-	PrecAndAnd
-	PrecCmp
-	PrecAdd
-	PrecMul
 )
