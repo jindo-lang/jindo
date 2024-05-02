@@ -16,7 +16,6 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-*.paw
 *.sum
 *.o
 *.a
@@ -31,5 +30,3 @@
 !go.work
 /.idea/
 /cmd-go/
-!*/testdata/
-!*/testdata/*.paw
