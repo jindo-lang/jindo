@@ -58,7 +58,12 @@ func init() {
 }
 
 func runCompile(ctx context.Context, cmd *command.Command, args []string) {
-	fmt.Printf("source(s): %v\noutput name: %v\n", args, FlagO)
+	name, format, err := validateOutputName(FlagO)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("source(s): %v\noutput name: %v\nformat: %v\n", args, name, format)
 	space, err := loadSpace(ctx, args)
 	if err != nil {
 		panic(err)
@@ -135,4 +140,26 @@ func loadSpace(ctx context.Context, sources []string) (s *Space, e error) {
 	s.Name = space
 
 	return s, nil
+}
+
+func validateOutputName(outputName string) (name string, format string, err error) {
+	// Default to output name and "obj" format
+	name, format = outputName, "obj"
+	if name == "" {
+		return
+	}
+
+	ext := filepath.Ext(name)
+	// Use a switch statement to check the file extension
+	switch ext {
+	case ".ir":
+		// If the output name ends with .ir, set format to IR
+		format = "ir"
+	case ".o", ".obj", ".out":
+		// If the output name ends with .obj, maintain the default format
+	default:
+		// If no valid extension is provided and name is not empty, return an error
+		err = fmt.Errorf("output name must end with either .ir or .obj")
+	}
+	return
 }
