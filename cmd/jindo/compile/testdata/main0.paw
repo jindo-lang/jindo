@@ -1,0 +1,22 @@
+space main
+
+import "hello"
+import "world"
+
+
+func main() {
+	printf("Hello world!\nThis is Glang 'hello world' demo\n")
+	printf("%d times %d equals to %d\n",4221,8221,4221*8221)
+	printf("Please check if the calculation is correct\n")
+	println("!6 is ",factorial(6))
+}
+
+// function demo with recursive call
+// factorial of given integer
+func factorial(n uint64) uint64 {
+    if n == 0 {
+        return 1
+    }
+    // recursive call
+    return n * factorial(n-1) // tail recursion
+}
