@@ -9,7 +9,7 @@ package scanner
 import (
 	"fmt"
 	"io"
-	"jindo/pkg/jindo/token"
+	"jindo-tool/compile/token"
 	"unicode"
 	"unicode/utf8"
 )

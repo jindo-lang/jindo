@@ -9,8 +9,8 @@ package parser
 import (
 	"fmt"
 	"io"
-	"jindo/pkg/jindo/ast"
-	"jindo/pkg/jindo/token"
+	"jindo-tool/compile/ast"
+	"jindo-tool/compile/token"
 	"strings"
 )
 

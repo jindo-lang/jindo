@@ -7,8 +7,8 @@
 package ast
 
 import (
-	"jindo/pkg/jindo/position"
-	"jindo/pkg/jindo/token"
+	"jindo-tool/compile/position"
+	"jindo-tool/compile/token"
 )
 
 type Node interface {

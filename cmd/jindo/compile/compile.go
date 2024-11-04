@@ -12,8 +12,8 @@ import (
 	"fmt"
 	"io"
 	"jindo-tool/command"
-	"jindo/pkg/jindo/ast"
-	"jindo/pkg/jindo/parser"
+	"jindo-tool/compile/ast"
+	"jindo-tool/compile/parser"
 	"os"
 	"path/filepath"
 )

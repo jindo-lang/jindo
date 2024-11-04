@@ -10,8 +10,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"jindo/pkg/jindo/ast"
-	"jindo/pkg/jindo/position"
+	"jindo-tool/compile/ast"
+	"jindo-tool/compile/position"
 	"os"
 	"testing"
 )

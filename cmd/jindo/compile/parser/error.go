@@ -8,7 +8,7 @@ package parser
 
 import (
 	"fmt"
-	"jindo/pkg/jindo/position"
+	"jindo-tool/compile/position"
 )
 
 // Error describes a syntax error. Error implements the error interface.
