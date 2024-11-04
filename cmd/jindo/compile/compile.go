@@ -13,6 +13,7 @@ import (
 	"io"
 	"jindo-tool/command"
 	"jindo-tool/compile/ast"
+	"jindo-tool/compile/codegen"
 	"jindo-tool/compile/parser"
 	"os"
 	"path/filepath"
@@ -121,6 +122,8 @@ func NewCompiler(printMode bool, errh parser.ErrorHandler) *Compiler {
 
 func (c *Compiler) compile(ctx context.Context, format string, space *Space) error {
 	//panic("compile")
+	codegen.InitializeSpaceModule(space.Name)
+	(*codegen.File)(space.FileSet[0]).Codegen()
 	return nil
 }
 
