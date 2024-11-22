@@ -18,14 +18,14 @@ func (f *bitset8) set(mask uint8, b bool) {
 	}
 }
 
-// BuiltinPkg is a fake package that declares the universe block.
-var BuiltinPkg *Pkg
+// BuiltinSpace is a fake package that declares the universe block.
+var BuiltinSpace *Space
 
-// LocalPkg is the package being compiled.
-var LocalPkg *Pkg
+// LocalSpace is the package being compiled.
+var LocalSpace *Space
 
-// UnsafePkg is package unsafe.
-var UnsafePkg *Pkg
+// UnsafeSpace is package unsafe.
+var UnsafeSpace *Space
 
 // BlankSym is the blank (_) symbol.
 var BlankSym *Sym

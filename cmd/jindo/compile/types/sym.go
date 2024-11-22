@@ -12,11 +12,11 @@ import (
 )
 
 // Sym represents an object name in a segmented (pkg, name) namespace.
-// Most commonly, this is a Go identifier naming an object declared within a package,
+// Most commonly, this is a Go identifier naming an object declared within a space,
 // but Syms are also used to name internal synthesized objects.
 //
 // As an exception, field and method names that are exported use the Sym
-// associated with localpkg instead of the package that declared them. This
+// associated with localpkg instead of the space that declared them. This
 // allows using Sym pointer equality to test for Go identifier uniqueness when
 // handling selector expressions.
 //
@@ -28,7 +28,7 @@ import (
 type Sym struct {
 	Linkname string // link name
 
-	Pkg  *Pkg
+	Space  *Space
 	Name string // object name
 
 	flags bitset8
@@ -61,7 +61,7 @@ func (sym *Sym) IsBlank() bool {
 // Less reports whether symbol a is ordered before symbol b.
 //
 // Symbols are ordered exported before non-exported, then by name, and
-// finally (for non-exported symbols) by package path.
+// finally (for non-exported symbols) by space path.
 func (a *Sym) Less(b *Sym) bool {
 	if a == b {
 		return false
@@ -82,13 +82,13 @@ func (a *Sym) Less(b *Sym) bool {
 		return ea
 	}
 
-	// Order by name and then (for non-exported names) by package
+	// Order by name and then (for non-exported names) by space
 	// height and path.
 	if a.Name != b.Name {
 		return a.Name < b.Name
 	}
 	if !ea {
-		return a.Pkg.Path < b.Pkg.Path
+		return a.Space.Path < b.Space.Path
 	}
 	return false
 }
