@@ -1,3 +1,4 @@
+// This Package is Deprecated
 package codegen
 
 import (
